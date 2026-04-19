@@ -3,69 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>烘焙量計算機 1.0</title>
-    
-    <link rel="apple-touch-icon" href="https://img.icons8.com/plasticine/200/coffee-beans.png">
-    <link rel="icon" href="https://img.icons8.com/plasticine/200/coffee-beans.png">
+    <title>烘焙量計算機 2.0</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --brand-color: #A67351; --bg-color: #F4F3F0; --dark-card: #262626; }
+        :root { --brand-color: #A67351; --bg-color: #F4F3F0; --dark-card: #262626; --danger: #EF4444; --success: #10B981; }
         body { 
             background-color: var(--bg-color); 
             font-family: 'Noto Sans TC', sans-serif; 
-            -webkit-font-smoothing: antialiased; 
             color: #403E3D;
-            overscroll-behavior-y: contain; /* 防止下拉重新整理影響操作 */
+            height: 100vh;
+            overflow: hidden;
         }
-        .main-container { width: 100%; max-width: 440px; margin: 0 auto; padding: 24px 16px; }
+
+        .dashboard-wrapper { display: flex; height: 100vh; }
+
+        /* 左側側邊欄樣式 */
+        .sidebar {
+            width: 420px;
+            background: var(--bg-color);
+            border-right: 1px solid #E5E4E0;
+            padding: 24px 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
         .glass-card { background: #FFFFFF; border-radius: 24px; padding: 24px; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.01); }
-        .dark-panel { background: var(--dark-card); border-radius: 28px; padding: 28px; color: #FFFFFF; box-shadow: 0 20px 40px rgba(0,0,0,0.12); margin-bottom: 16px; }
-        .conclusion-card { background: var(--brand-color); border-radius: 24px; padding: 32px 24px; color: #FFFFFF; text-align: center; box-shadow: 0 12px 30px rgba(166, 115, 81, 0.25); }
+        .dark-panel { background: var(--dark-card); border-radius: 28px; padding: 28px; color: #FFFFFF; box-shadow: 0 20px 40px rgba(0,0,0,0.12); margin-top: 12px; }
+        .conclusion-card { background: #E8E6E1; border-radius: 24px; padding: 20px; color: var(--brand-color); text-align: center; margin-bottom: 4px; border: 1px dashed var(--brand-color); }
+        
         .input-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #F6F6F6; white-space: nowrap; }
         .input-item:last-child { border-bottom: none; }
+        
         input[type="number"], .name-input { border: none; background: transparent; font-weight: 700; color: #2F2D2C; font-size: 1.1rem; outline: none; text-align: right; width: 100%; }
-        .name-input { font-weight: 500; font-size: 15px; color: #8C8C8C; }
+        .name-input { font-weight: 500; font-size: 15px; color: #8C8C8C; width: 180px; } 
         
-        /* 滑桿樣式優化 */
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; margin: 20px 0; }
-        input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #444; }
-        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: #FFF; cursor: pointer; margin-top: -9px; border: 2px solid var(--brand-color); }
-        
+        input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #555; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #FFF; border: 3px solid var(--brand-color); margin-top: -11px; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.3); }
+
         .stat-label { font-size: 11px; color: #A6A6A6; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
         .stat-value { font-size: 1.25rem; font-weight: 900; color: #2F2D2C; }
-        .dark-stat-label { font-size: 11px; color: #737373; font-weight: 500; letter-spacing: 0.05em; white-space: nowrap; }
-        .final-number-container { display: inline-flex; align-items: baseline; justify-content: center; gap: 8px; width: 100%; margin-top: 4px; }
-        .final-val { font-size: 3.5rem; font-weight: 900; line-height: 1; letter-spacing: -0.02em; }
-        .unit-text { font-size: 1.25rem; font-weight: 500; opacity: 0.9; }
-        .small-unit { font-size: 10px; font-weight: 500; color: #595959; margin-left: 4px; }
+
+        /* 右側清單樣式 */
+        .main-content { flex: 1; padding: 32px; display: flex; gap: 24px; overflow-y: auto; }
+        .list-container { flex: 1; }
+        .schedule-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+            align-items: center;
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            text-align: center;
+        }
+
+        .add-btn { background: var(--brand-color); color: white; width: 100%; padding: 16px; border-radius: 20px; font-weight: 900; font-size: 1rem; margin-top: 16px; transition: all 0.2s; box-shadow: 0 10px 20px rgba(166, 115, 81, 0.3); }
+        .add-btn:active { transform: scale(0.96); }
+
+        .export-btn { 
+            background: var(--brand-color); 
+            color: white; 
+            width: 100%; 
+            padding: 12px; 
+            border-radius: 16px; 
+            font-weight: 700; 
+            font-size: 0.9rem; 
+            margin-top: 48px; 
+            transition: all 0.2s; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px; 
+            box-shadow: 0 4px 12px rgba(166, 115, 81, 0.2); 
+        }
+        .export-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .export-btn:active { transform: translateY(0); }
+
+        .clear-btn { background: #FEE2E2; color: var(--danger); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 700; transition: all 0.2s; border: 1px solid #FECACA; }
+        .clear-btn:hover { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
     </style>
 </head>
 <body>
-    <div class="main-container space-y-4">
-        <div class="py-2 text-center">
+
+<div class="dashboard-wrapper">
+    <aside class="sidebar">
+        <div class="py-2 text-center mb-4">
             <p class="text-[10px] font-bold text-[#BFBFBF] tracking-[0.5em] uppercase mb-1">Bakery Logic Studio</p>
-            <h1 class="text-xl font-black text-[#262626] tracking-tight">烘焙量計算機 1.0</h1>
+            <h1 class="text-xl font-black text-[#262626] tracking-tight">烘焙量計算機 2.0</h1>
         </div>
 
         <div class="glass-card">
-            <div class="input-item border-b border-[#F9F9F9] mb-2">
+            <div class="input-item">
                 <span class="text-sm font-bold text-[#A67351] mr-4">品項名稱</span>
-                <input type="text" class="name-input" placeholder="請輸入品項名稱...">
+                <input type="text" id="itemName" class="name-input" placeholder="請輸入品項名稱...">
             </div>
             <div class="input-item">
                 <span class="text-sm font-bold">上週庫存總量</span>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="lastStock" value="30" oninput="calcAll()">
+                    <input type="number" id="lastStock" value="0" oninput="calcAll()">
                     <span class="text-[10px] font-bold text-[#D1D1D1]">包</span>
                 </div>
             </div>
             <div class="input-item">
                 <span class="text-sm font-bold">本週庫存總量</span>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="thisStock" value="12" oninput="calcAll()">
+                    <input type="number" id="thisStock" value="0" oninput="calcAll()">
                     <span class="text-[10px] font-bold text-[#D1D1D1]">包</span>
                 </div>
             </div>
@@ -78,87 +125,220 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
-            <div class="glass-card py-5 text-center">
+        <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="glass-card !mb-0 py-5 text-center">
                 <p class="stat-label mb-1">每週銷量</p>
                 <p class="stat-value" id="weekSale">0.0</p>
             </div>
-            <div class="glass-card py-5 text-center">
+            <div class="glass-card !mb-0 py-5 text-center">
                 <p class="stat-label mb-1">每日銷量</p>
                 <p class="stat-value" id="daySale">0.0</p>
             </div>
         </div>
 
-        <div class="dark-panel">
-            <div class="grid grid-cols-2 gap-4 mb-6 border-b border-white/[0.05] pb-6">
-                <div>
-                    <p class="dark-stat-label mb-1">現有庫存待售天數</p>
-                    <p class="text-2xl font-bold text-white"><span id="daysAvailable">0.0</span><span class="small-unit">天</span></p>
-                </div>
-                <div class="text-right border-l border-white/[0.05] pl-4">
-                    <p class="dark-stat-label mb-1">需要備貨天數</p>
-                    <p class="text-2xl font-bold text-white"><span id="daysNeeded">0.0</span><span class="small-unit">天</span></p>
-                </div>
-            </div>
-            <div class="bg-white/[0.03] rounded-2xl p-4 border border-white/[0.05] mb-8 flex justify-between items-center">
-                <span class="text-xs font-bold text-[#A67351] tracking-widest">需備貨包數</span>
-                <p class="text-2xl font-black text-white"><span id="neededPacks">0.0</span><span class="small-unit">包</span></p>
-            </div>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-white tracking-widest">模擬生產設定</span>
-                    <span class="text-[10px] text-[#595959] font-medium">調整模擬鍋數</span>
-                </div>
-                <input type="range" id="potSlider" min="0" max="10" step="1" value="1" oninput="calcAll()">
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.04] text-center">
-                        <p class="dark-stat-label mb-1">鍋數</p>
-                        <p class="text-2xl font-black text-white" id="sliderPots">1</p>
-                    </div>
-                    <div class="bg-white/[0.02] rounded-2xl p-4 border border-white/[0.04] text-center">
-                        <p class="dark-stat-label mb-1">預計可販售天數</p>
-                        <p class="text-2xl font-black text-[var(--brand-color)]" id="futureDays">0.0</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="conclusion-card">
-            <p class="text-[10px] font-bold uppercase tracking-[0.4em] mb-1 opacity-70">System Recommendation</p>
-            <p class="text-sm font-medium">建議鍋數</p>
-            <div class="final-number-container">
-                <span class="final-val" id="finalValue">0.5</span>
-                <span class="unit-text">鍋</span>
+            <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">System Advice</p>
+            <div class="flex items-center justify-center gap-2">
+                <span class="text-xs font-bold">建議烘焙鍋數：</span>
+                <span class="text-2xl font-black" id="finalValue">0.0</span>
+                <span class="text-xs font-bold">鍋</span>
             </div>
         </div>
-    </div>
 
-    <script>
-        const PER_BATCH = 30;
-        function calcAll() {
-            const last = parseFloat(document.getElementById('lastStock').value) || 0;
-            const now = parseFloat(document.getElementById('thisStock').value) || 0;
-            const debt = parseFloat(document.getElementById('debtStock').value) || 0;
-            const pots = parseInt(document.getElementById('potSlider').value);
-            
-            const weekSale = (last - now) + debt; 
-            const daySale = weekSale / 7;
-            const daysLeft = daySale > 0 ? now / daySale : 0;
-            const daysFill = Math.max(0, 10 - daysLeft);
-            const neededPacks = daysFill * daySale;
-            const recPots = daySale > 0 ? (daysFill * daySale) / PER_BATCH : 0;
-            const forecast = daySale > 0 ? ((pots * PER_BATCH) + now) / daySale : 0;
+        <div class="dark-panel">
+            <div class="space-y-4">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <span class="text-xs font-bold text-gray-400 tracking-widest uppercase">調整模擬鍋數</span>
+                    </div>
+                    <div class="text-right">
+                        <span id="sliderPots" class="text-5xl font-black text-[var(--brand-color)]">0</span>
+                        <span class="text-xs font-bold text-[var(--brand-color)] ml-1">鍋</span>
+                    </div>
+                </div>
+                
+                <input type="range" id="potSlider" min="0" max="10" step="1" value="0" oninput="calcAll()">
+                
+                <div class="bg-white/[0.03] rounded-2xl p-4 border border-white/[0.05] flex justify-between items-center">
+                    <span class="text-xs font-bold text-[#A67351]">預計可銷售天數</span>
+                    <p class="text-xl font-black text-white"><span id="futureDays">0.0</span><span class="text-[10px] ml-1 text-gray-500">天</span></p>
+                </div>
+            </div>
 
-            document.getElementById('weekSale').innerText = weekSale.toFixed(1);
-            document.getElementById('daySale').innerText = daySale.toFixed(1);
-            document.getElementById('daysAvailable').innerText = daysLeft.toFixed(1);
-            document.getElementById('daysNeeded').innerText = daysFill.toFixed(1);
-            document.getElementById('neededPacks').innerText = neededPacks.toFixed(1);
-            document.getElementById('sliderPots').innerText = pots;
-            document.getElementById('futureDays').innerText = forecast.toFixed(1);
-            document.getElementById('finalValue').innerText = recPots.toFixed(1);
+            <button onclick="addToSchedule()" class="add-btn">
+                新增至烘焙排程
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="list-container">
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h2 class="text-3xl font-black text-gray-800 tracking-tight">烘焙生產排程</h2>
+                    <p class="text-gray-400 mt-1 font-medium">各品項銷售及庫存預估模擬</p>
+                </div>
+                <button onclick="clearAll()" class="clear-btn">清空排程</button>
+            </div>
+
+            <div class="schedule-row !bg-transparent !shadow-none !pb-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                <div class="text-left pl-4">品項</div>
+                <div>日銷量</div>
+                <div>烘焙鍋數</div>
+                <div>預計可銷售天數</div>
+                <div>操作</div>
+            </div>
+
+            <div id="scheduleList"></div>
+        </div>
+
+        <div class="w-[280px]">
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 sticky top-0">
+                <p class="text-[10px] font-bold text-gray-400 tracking-widest mb-6">TOTAL SUMMARY</p>
+                
+                <div class="mb-8">
+                    <p class="text-sm text-gray-500 font-medium">總品項</p>
+                    <p class="text-3xl font-black text-gray-800 mt-1"><span id="totalItems">0</span><span class="text-sm ml-1 font-bold text-gray-400">項</span></p>
+                </div>
+
+                <div class="pt-6 border-t border-gray-50">
+                    <p class="text-sm text-gray-500 font-medium">當前總烘焙鍋數</p>
+                    <p class="text-5xl font-black text-[var(--brand-color)] mt-1"><span id="totalPots">0</span><span class="text-lg ml-2">鍋</span></p>
+                </div>
+
+                <button onclick="exportData()" class="export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    匯出烘焙排程
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const PER_BATCH = 30;
+    let schedule = [];
+
+    function calcAll() {
+        const last = parseFloat(document.getElementById('lastStock').value) || 0;
+        const now = parseFloat(document.getElementById('thisStock').value) || 0;
+        const debt = parseFloat(document.getElementById('debtStock').value) || 0;
+        const pots = parseInt(document.getElementById('potSlider').value);
+        
+        const weekSale = Math.max(0, (last - now) + debt); 
+        const daySale = weekSale / 7;
+        const daysLeft = daySale > 0 ? now / daySale : 0;
+        const daysFill = Math.max(0, 10 - daysLeft);
+        
+        const recPots = daySale > 0 ? (daysFill * daySale) / PER_BATCH : 0;
+        const forecast = daySale > 0 ? ((pots * PER_BATCH) + now) / daySale : 0;
+
+        document.getElementById('weekSale').innerText = weekSale.toFixed(1);
+        document.getElementById('daySale').innerText = daySale.toFixed(1);
+        document.getElementById('sliderPots').innerText = pots;
+        document.getElementById('futureDays').innerText = forecast.toFixed(1);
+        document.getElementById('finalValue').innerText = recPots.toFixed(1);
+    }
+
+    function addToSchedule() {
+        const nameInput = document.getElementById('itemName');
+        const name = nameInput.value || "未命名品項";
+        const daySale = document.getElementById('daySale').innerText;
+        const finalPots = parseInt(document.getElementById('potSlider').value);
+        const now = parseFloat(document.getElementById('thisStock').value) || 0;
+        
+        const futureDays = (parseFloat(daySale) > 0) 
+            ? ((finalPots * PER_BATCH) + now) / parseFloat(daySale) 
+            : 0;
+
+        const item = {
+            id: Date.now(),
+            name,
+            daySale,
+            pots: finalPots,
+            futureDays: futureDays.toFixed(1)
+        };
+
+        schedule.push(item);
+        renderSchedule();
+        
+        nameInput.value = "";
+        document.getElementById('lastStock').value = 0;
+        document.getElementById('thisStock').value = 0;
+        document.getElementById('debtStock').value = 0;
+        document.getElementById('potSlider').value = 0;
+        calcAll();
+    }
+
+    function renderSchedule() {
+        const listEl = document.getElementById('scheduleList');
+        listEl.innerHTML = '';
+        let potSum = 0;
+
+        schedule.forEach(item => {
+            potSum += item.pots;
+            listEl.innerHTML += `
+                <div class="schedule-row">
+                    <div class="text-left pl-4 font-black text-gray-700 text-lg">${item.name}</div>
+                    <div class="text-gray-500 font-bold">${item.daySale} <span class="text-[10px]">包</span></div>
+                    <div class="text-[var(--brand-color)] font-black text-2xl">${item.pots} <span class="text-[10px]">鍋</span></div>
+                    <div class="text-gray-500 font-bold">${item.futureDays} <span class="text-[10px]">天</span></div>
+                    <div>
+                        <button onclick="remove(${item.id})" class="text-xs text-red-300 hover:text-red-500 font-bold transition-colors">移除</button>
+                    </div>
+                </div>
+            `;
+        });
+
+        document.getElementById('totalPots').innerText = potSum;
+        document.getElementById('totalItems').innerText = schedule.length;
+    }
+
+    function remove(id) {
+        schedule = schedule.filter(i => i.id !== id);
+        renderSchedule();
+    }
+
+    function clearAll() {
+        if(confirm('確定要清空烘焙生產排程嗎？')) {
+            schedule = [];
+            renderSchedule();
         }
-        window.onload = calcAll;
-    </script>
+    }
+
+    function exportData() {
+        if (schedule.length === 0) {
+            alert('目前排程中沒有品項可供匯出。');
+            return;
+        }
+
+        let csvContent = "\uFEFF"; 
+        csvContent += "品項名稱,日銷量(包),烘焙鍋數,預計可銷售天數\n";
+        
+        schedule.forEach(item => {
+            csvContent += `${item.name},${item.daySale},${item.pots},${item.futureDays}\n`;
+        });
+
+        const totalPots = document.getElementById('totalPots').innerText;
+        csvContent += `\n當前總烘焙鍋數,,${totalPots} 鍋,\n`;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const date = new Date().toLocaleDateString().replace(/\//g, '-');
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", `烘焙生產排程_${date}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    window.onload = calcAll;
+</script>
+
 </body>
 </html>

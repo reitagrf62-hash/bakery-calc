@@ -41,7 +41,22 @@
         .input-item:last-child { border-bottom: none; }
         
         input[type="number"], .name-input { border: none; background: transparent; font-weight: 700; color: #2F2D2C; font-size: 1.1rem; outline: none; text-align: right; width: 100%; }
-        .name-input { font-weight: 500; font-size: 15px; color: #8C8C8C; width: 180px; text-align: right; } 
+        
+        /* 品項名稱輸入框優化 */
+        .name-input { 
+            font-weight: 700; 
+            font-size: 15px; 
+            color: #000000; /* 輸入後的字體為純黑 */
+            width: 180px; 
+            text-align: right; 
+        } 
+        
+        /* 輸入前的提示字優化：大小粗細與品項名稱一致，但顏色為淺灰 */
+        .name-input::placeholder {
+            color: #D1D1D1;
+            font-weight: 700;
+            font-size: 15px;
+        }
         
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; margin: 20px 0; }
         input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #555; }
@@ -54,7 +69,6 @@
         .main-content { flex: 1; padding: 32px; display: flex; gap: 24px; overflow-y: auto; }
         .list-container { flex: 1; }
         
-        /* 修正後的清單行排版 - 5 欄位設計 */
         .schedule-row {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr 100px;
@@ -82,18 +96,16 @@
         .clear-btn { background: #FEE2E2; color: var(--danger); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 700; transition: all 0.2s; border: 1px solid #FECACA; }
         .clear-btn:hover { background: var(--danger); color: white; }
 
-        /* 手機版優化：顯示所有欄位並調整寬度比例 */
         @media (max-width: 1024px) {
             body { overflow-y: auto; height: auto; }
             .dashboard-wrapper { flex-direction: column; height: auto; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #E5E4E0; }
             .main-content { flex-direction: column; padding: 16px; }
             .schedule-row { 
-                grid-template-columns: 1.5fr 1fr 1fr 1fr 65px; /* 重新分配 5 個欄位的空間 */
+                grid-template-columns: 1.5fr 1fr 1fr 1fr 65px; 
                 font-size: 0.75rem; 
                 padding: 12px 8px;
             }
-            .schedule-row div:nth-child(4) { display: block; } /* 確保天數顯示 */
             .stat-value { font-size: 1.1rem; }
         }
 
@@ -247,7 +259,6 @@
         const debt = parseFloat(document.getElementById('debtStock').value) || 0;
         const pots = parseInt(document.getElementById('potSlider').value);
         
-        // 銷量防呆，最低為 0
         const weekSale = Math.max(0, (last - now) + debt); 
         const daySale = weekSale / 7;
         const daysLeft = daySale > 0 ? now / daySale : 0;
@@ -255,12 +266,11 @@
         const daysFill = Math.max(0, 10 - daysLeft);
         const recPots = daySale > 0 ? (daysFill * daySale) / PER_BATCH : 0;
         
-        // 預計天數防呆
         let forecast = 0;
         if (daySale > 0) {
             forecast = ((pots * PER_BATCH) + now) / daySale;
         } else if (pots > 0) {
-            forecast = 99; // 若有產出但沒銷量，顯示為長期存貨
+            forecast = 99; 
         }
 
         document.getElementById('weekSale').innerText = f(weekSale);
@@ -301,7 +311,6 @@
         btn.classList.add('btn-update');
 
         calcAll();
-        // 手機版自動捲動到頂部編輯
         if(window.innerWidth < 1024) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }

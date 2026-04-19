@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>烘焙量計算機 2.0 - 專業版</title>
+    <title>烘焙量計算機 2.0 - 專業修正版</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
@@ -35,7 +35,6 @@
         .dark-panel { background: var(--dark-card); border-radius: 28px; padding: 28px; color: #FFFFFF; box-shadow: 0 20px 40px rgba(0,0,0,0.12); margin-top: 12px; }
         .conclusion-card { background: #E8E6E1; border-radius: 24px; padding: 20px; color: var(--brand-color); text-align: center; margin-bottom: 4px; border: 1px dashed var(--brand-color); transition: all 0.3s; }
         
-        /* 編輯模式下的發光效果 */
         .editing-mode { border: 2px solid var(--edit-color); box-shadow: 0 0 15px rgba(37, 99, 235, 0.2); }
 
         .input-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #F6F6F6; white-space: nowrap; }
@@ -54,6 +53,8 @@
         /* 右側清單樣式 */
         .main-content { flex: 1; padding: 32px; display: flex; gap: 24px; overflow-y: auto; }
         .list-container { flex: 1; }
+        
+        /* 修正後的清單行排版 - 5 欄位設計 */
         .schedule-row {
             display: grid;
             grid-template-columns: 2fr 1fr 1fr 1fr 100px;
@@ -81,17 +82,21 @@
         .clear-btn { background: #FEE2E2; color: var(--danger); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 700; transition: all 0.2s; border: 1px solid #FECACA; }
         .clear-btn:hover { background: var(--danger); color: white; }
 
-        /* 響應式修正 */
+        /* 手機版優化：顯示所有欄位並調整寬度比例 */
         @media (max-width: 1024px) {
             body { overflow-y: auto; height: auto; }
             .dashboard-wrapper { flex-direction: column; height: auto; }
             .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #E5E4E0; }
-            .main-content { flex-direction: column; }
-            .schedule-row { grid-template-columns: 1.5fr 1fr 1fr 80px; font-size: 0.8rem; }
-            .schedule-row div:nth-child(4) { display: none; } /* 手機版隱藏預計天數列節省空間 */
+            .main-content { flex-direction: column; padding: 16px; }
+            .schedule-row { 
+                grid-template-columns: 1.5fr 1fr 1fr 1fr 65px; /* 重新分配 5 個欄位的空間 */
+                font-size: 0.75rem; 
+                padding: 12px 8px;
+            }
+            .schedule-row div:nth-child(4) { display: block; } /* 確保天數顯示 */
+            .stat-value { font-size: 1.1rem; }
         }
 
-        /* 捲軸美化 */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
@@ -192,9 +197,9 @@
 
             <div class="schedule-row !bg-transparent !shadow-none !pb-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest cursor-default">
                 <div class="text-left pl-4">品項</div>
-                <div>日銷量</div>
-                <div>烘焙鍋數</div>
-                <div>預計銷售天數</div>
+                <div>日銷</div>
+                <div>鍋數</div>
+                <div>天數</div>
                 <div>操作</div>
             </div>
 
@@ -228,12 +233,13 @@
 
 <script>
     const PER_BATCH = 30;
-    // 從 LocalStorage 初始化數據
     let schedule = JSON.parse(localStorage.getItem('bakery_data')) || [];
     let editId = null;
 
-    // 數字格式化輔助函數（去除無用的 .0）
-    const f = (num) => parseFloat(num).toFixed(1).replace(/\.0$/, '');
+    const f = (num) => {
+        if (!isFinite(num)) return '0';
+        return parseFloat(num).toFixed(1).replace(/\.0$/, '');
+    };
 
     function calcAll() {
         const last = parseFloat(document.getElementById('lastStock').value) || 0;
@@ -241,14 +247,21 @@
         const debt = parseFloat(document.getElementById('debtStock').value) || 0;
         const pots = parseInt(document.getElementById('potSlider').value);
         
+        // 銷量防呆，最低為 0
         const weekSale = Math.max(0, (last - now) + debt); 
         const daySale = weekSale / 7;
         const daysLeft = daySale > 0 ? now / daySale : 0;
         
-        // 建議補足至 10 天庫存
         const daysFill = Math.max(0, 10 - daysLeft);
         const recPots = daySale > 0 ? (daysFill * daySale) / PER_BATCH : 0;
-        const forecast = daySale > 0 ? ((pots * PER_BATCH) + now) / daySale : 0;
+        
+        // 預計天數防呆
+        let forecast = 0;
+        if (daySale > 0) {
+            forecast = ((pots * PER_BATCH) + now) / daySale;
+        } else if (pots > 0) {
+            forecast = 99; // 若有產出但沒銷量，顯示為長期存貨
+        }
 
         document.getElementById('weekSale').innerText = f(weekSale);
         document.getElementById('daySale').innerText = f(daySale);
@@ -256,7 +269,6 @@
         document.getElementById('futureDays').innerText = f(forecast);
         document.getElementById('finalValue').innerText = f(recPots);
 
-        // 視覺回饋：若建議鍋數 > 0，卡片稍微變色提醒
         const adviceCard = document.getElementById('adviceCard');
         if (recPots > 0.5) {
             adviceCard.style.backgroundColor = "#FFF7ED";
@@ -289,7 +301,10 @@
         btn.classList.add('btn-update');
 
         calcAll();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        // 手機版自動捲動到頂部編輯
+        if(window.innerWidth < 1024) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     function addToSchedule() {
@@ -343,15 +358,15 @@
             potSum += item.pots;
             listEl.innerHTML += `
                 <div class="schedule-row" onclick="startEdit(${item.id})">
-                    <div class="text-left pl-4">
-                        <div class="font-black text-gray-700 text-lg">${item.name}</div>
-                        <div class="text-[10px] text-blue-500 font-bold uppercase">Click to Edit</div>
+                    <div class="text-left pl-1">
+                        <div class="font-black text-gray-700 text-base md:text-lg truncate">${item.name}</div>
+                        <div class="text-[9px] text-blue-500 font-bold uppercase">Click Edit</div>
                     </div>
-                    <div class="text-gray-500 font-bold">${item.daySale} <span class="text-[10px]">包</span></div>
-                    <div class="text-[var(--brand-color)] font-black text-2xl">${item.pots} <span class="text-[10px]">鍋</span></div>
-                    <div class="text-gray-500 font-bold">${item.futureDays} <span class="text-[10px]">天</span></div>
+                    <div class="text-gray-500 font-bold">${item.daySale}<span class="text-[9px] ml-0.5">包</span></div>
+                    <div class="text-[var(--brand-color)] font-black text-xl md:text-2xl">${item.pots}<span class="text-[9px] ml-0.5">鍋</span></div>
+                    <div class="text-gray-500 font-bold">${item.futureDays}<span class="text-[9px] ml-0.5">天</span></div>
                     <div onclick="event.stopPropagation()">
-                        <button onclick="remove(${item.id})" class="text-xs text-red-300 hover:text-red-500 font-bold transition-colors">移除</button>
+                        <button onclick="remove(${item.id})" class="text-[10px] text-red-300 hover:text-red-500 font-bold transition-colors">移除</button>
                     </div>
                 </div>
             `;

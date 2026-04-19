@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>烘焙量計算機 2.0</title>
+    <title>烘焙量計算機 2.0 - 專業版</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
     
     <style>
-        :root { --brand-color: #A67351; --bg-color: #F4F3F0; --dark-card: #262626; --danger: #EF4444; --success: #10B981; }
+        :root { --brand-color: #A67351; --bg-color: #F4F3F0; --dark-card: #262626; --danger: #EF4444; --success: #10B981; --edit-color: #2563EB; }
         body { 
             background-color: var(--bg-color); 
             font-family: 'Noto Sans TC', sans-serif; 
@@ -29,16 +29,20 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
-        .glass-card { background: #FFFFFF; border-radius: 24px; padding: 24px; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.01); }
+        .glass-card { background: #FFFFFF; border-radius: 24px; padding: 24px; margin-bottom: 12px; border: 1px solid rgba(0,0,0,0.01); transition: all 0.3s ease; }
         .dark-panel { background: var(--dark-card); border-radius: 28px; padding: 28px; color: #FFFFFF; box-shadow: 0 20px 40px rgba(0,0,0,0.12); margin-top: 12px; }
-        .conclusion-card { background: #E8E6E1; border-radius: 24px; padding: 20px; color: var(--brand-color); text-align: center; margin-bottom: 4px; border: 1px dashed var(--brand-color); }
+        .conclusion-card { background: #E8E6E1; border-radius: 24px; padding: 20px; color: var(--brand-color); text-align: center; margin-bottom: 4px; border: 1px dashed var(--brand-color); transition: all 0.3s; }
         
+        /* 編輯模式下的發光效果 */
+        .editing-mode { border: 2px solid var(--edit-color); box-shadow: 0 0 15px rgba(37, 99, 235, 0.2); }
+
         .input-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #F6F6F6; white-space: nowrap; }
         .input-item:last-child { border-bottom: none; }
         
         input[type="number"], .name-input { border: none; background: transparent; font-weight: 700; color: #2F2D2C; font-size: 1.1rem; outline: none; text-align: right; width: 100%; }
-        .name-input { font-weight: 500; font-size: 15px; color: #8C8C8C; width: 180px; } 
+        .name-input { font-weight: 500; font-size: 15px; color: #8C8C8C; width: 180px; text-align: right; } 
         
         input[type=range] { -webkit-appearance: none; background: transparent; width: 100%; margin: 20px 0; }
         input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #555; }
@@ -60,32 +64,37 @@
             margin-bottom: 12px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
             text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
         }
+        .schedule-row:hover { transform: translateY(-2px); border-color: var(--brand-color); box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
 
         .add-btn { background: var(--brand-color); color: white; width: 100%; padding: 16px; border-radius: 20px; font-weight: 900; font-size: 1rem; margin-top: 16px; transition: all 0.2s; box-shadow: 0 10px 20px rgba(166, 115, 81, 0.3); }
         .add-btn:active { transform: scale(0.96); }
+        .btn-update { background: var(--edit-color) !important; box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3) !important; }
 
         .export-btn { 
-            background: var(--brand-color); 
-            color: white; 
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 16px; 
-            font-weight: 700; 
-            font-size: 0.9rem; 
-            margin-top: 48px; 
-            transition: all 0.2s; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 8px; 
-            box-shadow: 0 4px 12px rgba(166, 115, 81, 0.2); 
+            background: var(--brand-color); color: white; width: 100%; padding: 12px; border-radius: 16px; font-weight: 700; font-size: 0.9rem; margin-top: 48px; 
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(166, 115, 81, 0.2); 
         }
-        .export-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-        .export-btn:active { transform: translateY(0); }
-
         .clear-btn { background: #FEE2E2; color: var(--danger); padding: 6px 16px; border-radius: 99px; font-size: 12px; font-weight: 700; transition: all 0.2s; border: 1px solid #FECACA; }
-        .clear-btn:hover { background: var(--danger); color: white; border-color: var(--danger); box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+        .clear-btn:hover { background: var(--danger); color: white; }
+
+        /* 響應式修正 */
+        @media (max-width: 1024px) {
+            body { overflow-y: auto; height: auto; }
+            .dashboard-wrapper { flex-direction: column; height: auto; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #E5E4E0; }
+            .main-content { flex-direction: column; }
+            .schedule-row { grid-template-columns: 1.5fr 1fr 1fr 80px; font-size: 0.8rem; }
+            .schedule-row div:nth-child(4) { display: none; } /* 手機版隱藏預計天數列節省空間 */
+        }
+
+        /* 捲軸美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -97,7 +106,7 @@
             <h1 class="text-xl font-black text-[#262626] tracking-tight">烘焙量計算機 2.0</h1>
         </div>
 
-        <div class="glass-card">
+        <div id="inputForm" class="glass-card">
             <div class="input-item">
                 <span class="text-sm font-bold text-[#A67351] mr-4">品項名稱</span>
                 <input type="text" id="itemName" class="name-input" placeholder="請輸入品項名稱...">
@@ -105,21 +114,21 @@
             <div class="input-item">
                 <span class="text-sm font-bold">上週庫存總量</span>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="lastStock" value="0" oninput="calcAll()">
+                    <input type="number" id="lastStock" value="0" inputmode="decimal" oninput="calcAll()">
                     <span class="text-[10px] font-bold text-[#D1D1D1]">包</span>
                 </div>
             </div>
             <div class="input-item">
                 <span class="text-sm font-bold">本週庫存總量</span>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="thisStock" value="0" oninput="calcAll()">
+                    <input type="number" id="thisStock" value="0" inputmode="decimal" oninput="calcAll()">
                     <span class="text-[10px] font-bold text-[#D1D1D1]">包</span>
                 </div>
             </div>
             <div class="input-item">
                 <span class="text-sm font-bold text-[#D35400]">欠貨數量</span>
                 <div class="flex items-center gap-2">
-                    <input type="number" id="debtStock" value="0" oninput="calcAll()" style="color: #D35400;">
+                    <input type="number" id="debtStock" value="0" inputmode="decimal" oninput="calcAll()" style="color: #D35400;">
                     <span class="text-[10px] font-bold text-[#D1D1D1]">包</span>
                 </div>
             </div>
@@ -128,19 +137,19 @@
         <div class="grid grid-cols-2 gap-3 mb-4">
             <div class="glass-card !mb-0 py-5 text-center">
                 <p class="stat-label mb-1">每週銷量</p>
-                <p class="stat-value" id="weekSale">0.0</p>
+                <p class="stat-value" id="weekSale">0</p>
             </div>
             <div class="glass-card !mb-0 py-5 text-center">
                 <p class="stat-label mb-1">每日銷量</p>
-                <p class="stat-value" id="daySale">0.0</p>
+                <p class="stat-value" id="daySale">0</p>
             </div>
         </div>
 
-        <div class="conclusion-card">
+        <div class="conclusion-card" id="adviceCard">
             <p class="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">System Advice</p>
             <div class="flex items-center justify-center gap-2">
                 <span class="text-xs font-bold">建議烘焙鍋數：</span>
-                <span class="text-2xl font-black" id="finalValue">0.0</span>
+                <span class="text-2xl font-black" id="finalValue">0</span>
                 <span class="text-xs font-bold">鍋</span>
             </div>
         </div>
@@ -157,15 +166,15 @@
                     </div>
                 </div>
                 
-                <input type="range" id="potSlider" min="0" max="10" step="1" value="0" oninput="calcAll()">
+                <input type="range" id="potSlider" min="0" max="15" step="1" value="0" oninput="calcAll()">
                 
                 <div class="bg-white/[0.03] rounded-2xl p-4 border border-white/[0.05] flex justify-between items-center">
                     <span class="text-xs font-bold text-[#A67351]">預計可銷售天數</span>
-                    <p class="text-xl font-black text-white"><span id="futureDays">0.0</span><span class="text-[10px] ml-1 text-gray-500">天</span></p>
+                    <p class="text-xl font-black text-white"><span id="futureDays">0</span><span class="text-[10px] ml-1 text-gray-500">天</span></p>
                 </div>
             </div>
 
-            <button onclick="addToSchedule()" class="add-btn">
+            <button id="submitBtn" onclick="addToSchedule()" class="add-btn">
                 新增至烘焙排程
             </button>
         </div>
@@ -176,24 +185,24 @@
             <div class="flex justify-between items-end mb-8">
                 <div>
                     <h2 class="text-3xl font-black text-gray-800 tracking-tight">烘焙生產排程</h2>
-                    <p class="text-gray-400 mt-1 font-medium">各品項銷售及庫存預估模擬</p>
+                    <p class="text-gray-400 mt-1 font-medium">點擊品項列可重新編輯調整</p>
                 </div>
                 <button onclick="clearAll()" class="clear-btn">清空排程</button>
             </div>
 
-            <div class="schedule-row !bg-transparent !shadow-none !pb-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+            <div class="schedule-row !bg-transparent !shadow-none !pb-2 text-[11px] font-bold text-gray-400 uppercase tracking-widest cursor-default">
                 <div class="text-left pl-4">品項</div>
                 <div>日銷量</div>
                 <div>烘焙鍋數</div>
-                <div>預計可銷售天數</div>
+                <div>預計銷售天數</div>
                 <div>操作</div>
             </div>
 
             <div id="scheduleList"></div>
         </div>
 
-        <div class="w-[280px]">
-            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 sticky top-0">
+        <div class="lg:w-[280px] w-full">
+            <div class="bg-white rounded-[32px] p-8 shadow-sm border border-gray-100 sticky top-8">
                 <p class="text-[10px] font-bold text-gray-400 tracking-widest mb-6">TOTAL SUMMARY</p>
                 
                 <div class="mb-8">
@@ -219,7 +228,12 @@
 
 <script>
     const PER_BATCH = 30;
-    let schedule = [];
+    // 從 LocalStorage 初始化數據
+    let schedule = JSON.parse(localStorage.getItem('bakery_data')) || [];
+    let editId = null;
+
+    // 數字格式化輔助函數（去除無用的 .0）
+    const f = (num) => parseFloat(num).toFixed(1).replace(/\.0$/, '');
 
     function calcAll() {
         const last = parseFloat(document.getElementById('lastStock').value) || 0;
@@ -230,41 +244,89 @@
         const weekSale = Math.max(0, (last - now) + debt); 
         const daySale = weekSale / 7;
         const daysLeft = daySale > 0 ? now / daySale : 0;
-        const daysFill = Math.max(0, 10 - daysLeft);
         
+        // 建議補足至 10 天庫存
+        const daysFill = Math.max(0, 10 - daysLeft);
         const recPots = daySale > 0 ? (daysFill * daySale) / PER_BATCH : 0;
         const forecast = daySale > 0 ? ((pots * PER_BATCH) + now) / daySale : 0;
 
-        document.getElementById('weekSale').innerText = weekSale.toFixed(1);
-        document.getElementById('daySale').innerText = daySale.toFixed(1);
+        document.getElementById('weekSale').innerText = f(weekSale);
+        document.getElementById('daySale').innerText = f(daySale);
         document.getElementById('sliderPots').innerText = pots;
-        document.getElementById('futureDays').innerText = forecast.toFixed(1);
-        document.getElementById('finalValue').innerText = recPots.toFixed(1);
+        document.getElementById('futureDays').innerText = f(forecast);
+        document.getElementById('finalValue').innerText = f(recPots);
+
+        // 視覺回饋：若建議鍋數 > 0，卡片稍微變色提醒
+        const adviceCard = document.getElementById('adviceCard');
+        if (recPots > 0.5) {
+            adviceCard.style.backgroundColor = "#FFF7ED";
+            adviceCard.style.borderColor = "#F97316";
+        } else {
+            adviceCard.style.backgroundColor = "#E8E6E1";
+            adviceCard.style.borderColor = "var(--brand-color)";
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('bakery_data', JSON.stringify(schedule));
+        renderSchedule();
+    }
+
+    function startEdit(id) {
+        const item = schedule.find(i => i.id === id);
+        if(!item) return;
+
+        editId = id;
+        document.getElementById('itemName').value = item.name;
+        document.getElementById('lastStock').value = item.rawData.last;
+        document.getElementById('thisStock').value = item.rawData.now;
+        document.getElementById('debtStock').value = item.rawData.debt;
+        document.getElementById('potSlider').value = item.pots;
+
+        document.getElementById('inputForm').classList.add('editing-mode');
+        const btn = document.getElementById('submitBtn');
+        btn.innerText = "確認修改項目";
+        btn.classList.add('btn-update');
+
+        calcAll();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function addToSchedule() {
-        const nameInput = document.getElementById('itemName');
-        const name = nameInput.value || "未命名品項";
+        const name = document.getElementById('itemName').value.trim() || "未命名品項";
         const daySale = document.getElementById('daySale').innerText;
         const finalPots = parseInt(document.getElementById('potSlider').value);
+        const last = parseFloat(document.getElementById('lastStock').value) || 0;
         const now = parseFloat(document.getElementById('thisStock').value) || 0;
-        
-        const futureDays = (parseFloat(daySale) > 0) 
-            ? ((finalPots * PER_BATCH) + now) / parseFloat(daySale) 
-            : 0;
+        const debt = parseFloat(document.getElementById('debtStock').value) || 0;
+        const futureDays = document.getElementById('futureDays').innerText;
 
-        const item = {
-            id: Date.now(),
+        const itemData = {
             name,
             daySale,
             pots: finalPots,
-            futureDays: futureDays.toFixed(1)
+            futureDays,
+            rawData: { last, now, debt }
         };
 
-        schedule.push(item);
-        renderSchedule();
-        
-        nameInput.value = "";
+        if(editId !== null) {
+            const index = schedule.findIndex(i => i.id === editId);
+            schedule[index] = { ...schedule[index], ...itemData, id: editId };
+            editId = null;
+            document.getElementById('inputForm').classList.remove('editing-mode');
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "新增至烘焙排程";
+            btn.classList.remove('btn-update');
+        } else {
+            schedule.push({ id: Date.now(), ...itemData });
+        }
+
+        saveAndRender();
+        resetInputs();
+    }
+
+    function resetInputs() {
+        document.getElementById('itemName').value = "";
         document.getElementById('lastStock').value = 0;
         document.getElementById('thisStock').value = 0;
         document.getElementById('debtStock').value = 0;
@@ -280,12 +342,15 @@
         schedule.forEach(item => {
             potSum += item.pots;
             listEl.innerHTML += `
-                <div class="schedule-row">
-                    <div class="text-left pl-4 font-black text-gray-700 text-lg">${item.name}</div>
+                <div class="schedule-row" onclick="startEdit(${item.id})">
+                    <div class="text-left pl-4">
+                        <div class="font-black text-gray-700 text-lg">${item.name}</div>
+                        <div class="text-[10px] text-blue-500 font-bold uppercase">Click to Edit</div>
+                    </div>
                     <div class="text-gray-500 font-bold">${item.daySale} <span class="text-[10px]">包</span></div>
                     <div class="text-[var(--brand-color)] font-black text-2xl">${item.pots} <span class="text-[10px]">鍋</span></div>
                     <div class="text-gray-500 font-bold">${item.futureDays} <span class="text-[10px]">天</span></div>
-                    <div>
+                    <div onclick="event.stopPropagation()">
                         <button onclick="remove(${item.id})" class="text-xs text-red-300 hover:text-red-500 font-bold transition-colors">移除</button>
                     </div>
                 </div>
@@ -297,47 +362,50 @@
     }
 
     function remove(id) {
+        if(!confirm('確定要移除此品項嗎？')) return;
+        if(editId === id) {
+            editId = null;
+            document.getElementById('inputForm').classList.remove('editing-mode');
+            const btn = document.getElementById('submitBtn');
+            btn.innerText = "新增至烘焙排程";
+            btn.classList.remove('btn-update');
+        }
         schedule = schedule.filter(i => i.id !== id);
-        renderSchedule();
+        saveAndRender();
     }
 
     function clearAll() {
-        if(confirm('確定要清空烘焙生產排程嗎？')) {
+        if(confirm('警告：確定要清空所有的烘焙排程嗎？')) {
             schedule = [];
-            renderSchedule();
+            editId = null;
+            saveAndRender();
+            resetInputs();
         }
     }
 
     function exportData() {
-        if (schedule.length === 0) {
-            alert('目前排程中沒有品項可供匯出。');
-            return;
-        }
-
-        let csvContent = "\uFEFF"; 
-        csvContent += "品項名稱,日銷量(包),烘焙鍋數,預計可銷售天數\n";
+        if (schedule.length === 0) return alert('目前沒有數據可匯出');
         
+        let csvContent = "\uFEFF品項名稱,日銷量(包),烘焙鍋數,預計可銷售天數\n";
         schedule.forEach(item => {
             csvContent += `${item.name},${item.daySale},${item.pots},${item.futureDays}\n`;
         });
-
-        const totalPots = document.getElementById('totalPots').innerText;
-        csvContent += `\n當前總烘焙鍋數,,${totalPots} 鍋,\n`;
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        const date = new Date().toLocaleDateString().replace(/\//g, '-');
         
-        link.setAttribute("href", url);
-        link.setAttribute("download", `烘焙生產排程_${date}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
+        const totalPots = document.getElementById('totalPots').innerText;
+        csvContent += `\n總計烘焙鍋數,,${totalPots} 鍋,\n`;
+        
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const date = new Date().toISOString().split('T')[0];
+        link.href = URL.createObjectURL(blob);
+        link.download = `烘焙生產排程_${date}.csv`;
         link.click();
-        document.body.removeChild(link);
     }
 
-    window.onload = calcAll;
+    window.onload = () => {
+        calcAll();
+        renderSchedule();
+    };
 </script>
 
 </body>
